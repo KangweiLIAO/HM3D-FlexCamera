@@ -2,11 +2,19 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour {
     public Camera[] cameras;
+    public float rotateSpeed = 100f;
+
     private int currCamIndex = 0;
+    float xRotation = 0f;
+    float yRotation = 0f;
+
     // Start is called before the first frame update
     void Start() {
-        Debug.Log("Camera Count: " + Camera.allCamerasCount);
+        // initialization:
+        Cursor.lockState = CursorLockMode.Locked;
         cameras = Camera.allCameras;
+        Debug.Log("Camera Count: " + Camera.allCamerasCount);
+
         for (int i = 1; i < cameras.Length; i++) {
             cameras[i].gameObject.SetActive(false);
         }
@@ -32,5 +40,14 @@ public class CameraController : MonoBehaviour {
                 Debug.Log("Camera with name: " + cameras[currCamIndex].name + ", is now enabled");
             }
         }
+
+        float mouseX = Input.GetAxis("Mouse X") * rotateSpeed * Time.deltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * rotateSpeed * Time.deltaTime;
+        xRotation -= mouseY;
+        yRotation -= mouseX;
+        xRotation = Mathf.Clamp(xRotation, -90f, 90f);
+        cameras[currCamIndex].transform.localRotation = Quaternion.Euler(xRotation, -yRotation, 0f);
+        cameras[currCamIndex].transform.Rotate(Vector3.up * mouseX);
+        cameras[currCamIndex].transform.Rotate(Vector3.left * mouseY);
     }
 }
