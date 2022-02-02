@@ -2,11 +2,11 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour {
     public Camera[] cameras;
-    public float rotateSpeed = 100f;
+    public float rotateSpeed = 2f;
 
     private int currCamIndex = 0;
-    float xRotation = 0f;
-    float yRotation = 0f;
+    private Vector2 rotation = Vector2.zero;
+
 
     // Start is called before the first frame update
     void Start() {
@@ -26,9 +26,11 @@ public class CameraController : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
+        rotation += new Vector2(-Input.GetAxis("Mouse Y"), Input.GetAxis("Mouse X"));
+        cameras[currCamIndex].transform.eulerAngles = rotation * rotateSpeed;
+
         if (Input.GetKeyDown(KeyCode.C)) {
             currCamIndex++;
-            Debug.Log("C button has been pressed. Switching to the next camera");
             if (currCamIndex < cameras.Length) {
                 cameras[currCamIndex - 1].gameObject.SetActive(false);
                 cameras[currCamIndex].gameObject.SetActive(true);
@@ -40,14 +42,5 @@ public class CameraController : MonoBehaviour {
                 Debug.Log("Camera with name: " + cameras[currCamIndex].name + ", is now enabled");
             }
         }
-
-        float mouseX = Input.GetAxis("Mouse X") * rotateSpeed * Time.deltaTime;
-        float mouseY = Input.GetAxis("Mouse Y") * rotateSpeed * Time.deltaTime;
-        xRotation -= mouseY;
-        yRotation -= mouseX;
-        xRotation = Mathf.Clamp(xRotation, -90f, 90f);
-        cameras[currCamIndex].transform.localRotation = Quaternion.Euler(xRotation, -yRotation, 0f);
-        cameras[currCamIndex].transform.Rotate(Vector3.up * mouseX);
-        cameras[currCamIndex].transform.Rotate(Vector3.left * mouseY);
     }
 }
