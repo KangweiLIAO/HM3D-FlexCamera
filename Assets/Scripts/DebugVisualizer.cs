@@ -2,7 +2,7 @@ using UnityEditor;
 using UnityEngine;
 
 [CustomEditor(typeof(MeshFilter))]
-public class NormalsVisualizer : Editor {
+public class DebugVisualizer : Editor {
 
     private const string EDITOR_NML_KEY = "_normals_length";
     private Mesh mesh;
@@ -14,7 +14,7 @@ public class NormalsVisualizer : Editor {
     private void OnEnable() {
         mf = target as MeshFilter;
         if (mf != null) {
-            mesh = mf.mesh;
+            mesh = mf.sharedMesh;
         }
         normalsLength = EditorPrefs.GetFloat(EDITOR_NML_KEY);
     }
@@ -29,6 +29,8 @@ public class NormalsVisualizer : Editor {
         verts = mesh.vertices;
         normals = mesh.normals;
         int len = mesh.vertexCount;
+
+        Handles.DrawWireCube(mesh.bounds.center, mesh.bounds.size);
 
         for (int i = 0; i < len; i++) {
             Handles.DrawLine(verts[i], verts[i] + normals[i] * normalsLength);

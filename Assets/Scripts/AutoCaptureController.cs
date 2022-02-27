@@ -2,28 +2,32 @@ using UnityEngine;
 using UnityEditor;
 
 public class AutoCaptureController : MonoBehaviour {
+    [Range(0, 20)]
+    public int pointDensity = 10;
     public bool combineMeshes = false;
-    public GameObject sourceGroup;  // HM3D dataset model that contains a group of sub-meshes
 
     // Start is called before the first frame update
     void Start() {
-        MeshFilter mf = sourceGroup.GetComponent<MeshFilter>();
-        if (!mf && combineMeshes) {
-            mf = sourceGroup.AddComponent(typeof(MeshFilter)) as MeshFilter; // create a mesh filter component
-            MeshFilter[] meshFilters = sourceGroup.GetComponentsInChildren<MeshFilter>();
-            CombineInstance[] combine = new CombineInstance[meshFilters.Length];
-            int i = 0;
-            while (i < meshFilters.Length) {
-                combine[i].mesh = meshFilters[i].sharedMesh;
-                combine[i].transform = meshFilters[i].transform.localToWorldMatrix;
-                i++;
+        MeshFilter mf = gameObject.GetComponent<MeshFilter>();
+        if (combineMeshes) {
+            // if want to combine meshes under this gameObject
+            if (!mf) {
+                // if game object don't have a mesh filter
+                mf = gameObject.AddComponent(typeof(MeshFilter)) as MeshFilter; // create a mesh filter component
+                MeshFilter[] meshFilters = gameObject.GetComponentsInChildren<MeshFilter>();
+                CombineInstance[] combine = new CombineInstance[meshFilters.Length];
+                int i = 0;
+                while (i < meshFilters.Length) {
+                    combine[i].mesh = meshFilters[i].sharedMesh;
+                    combine[i].transform = meshFilters[i].transform.localToWorldMatrix;
+                    i++;
+                }
+                mf.mesh = new Mesh();   // create a new mesh to apply combined mesh
+                mf.mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32; // set UInt32 to contains large scale of verties
+                mf.mesh.CombineMeshes(combine);
+                CreateCombinedMeshAssets(mf.mesh);
             }
-            mf.mesh = new Mesh();   // create a new mesh to apply combined mesh
-            mf.mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32; // set UInt32 to contains large scale of verties
-            mf.mesh.CombineMeshes(combine);
-            CreateCombinedMeshAssets(mf.mesh);
         }
-        SpawnInnerRandomPoints(mf.mesh, false);
     }
 
     // Update is called once per frame
@@ -43,14 +47,11 @@ public class AutoCaptureController : MonoBehaviour {
         Debug.Log(AssetDatabase.GetAssetPath(mesh));    // Print the path of the saved asset
     }
 
-    void SpawnInnerRandomPoints(Mesh mesh, bool convexity) {
+    void SpawnPoints(Mesh mesh) {
 
     }
 
     bool IsInside(Mesh mesh, Vector3 point) {
-        if (!mesh.bounds.Contains(point)) {
-            return false;
-        }
-        return false;
+        return true;
     }
 }
