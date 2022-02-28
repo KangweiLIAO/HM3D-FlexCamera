@@ -19,7 +19,7 @@ public class CameraController : MonoBehaviour {
         }
         if (cameras.Length > 0) {
             cameras[0].gameObject.SetActive(true);
-            Debug.Log("Camera with name: " + cameras[0].name + ", is now enabled");
+            Debug.Log("Camera(" + cameras[0].name + ") enabled");
         }
     }
 
