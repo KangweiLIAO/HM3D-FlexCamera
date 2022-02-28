@@ -2,11 +2,13 @@ using UnityEngine;
 using UnityEditor;
 
 public class PanoramaCapture : MonoBehaviour {
+
     public Camera targetCam;
     public Material cubemapMaterial;
 
     // Start is called before the first frame update
     void Start() {
+        targetCam = gameObject.GetComponent<Camera>();
         RenderTexture cubemapRT;
         // find asset with name Cubemap, type of renderTexture in folder "Assets/Textures":
         string[] guids = AssetDatabase.FindAssets("Cubemap t:renderTexture", new[] { "Assets/Textures" });
