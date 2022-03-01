@@ -6,13 +6,9 @@ This project using [Unity](https://unity.com/) as the development tool to conduc
 
 ## Project Topic
 
----
-
 Flexible camera configurations (regular pinhole, fisheye and panoramic lenses) in a semi-realistic rendering environment (HM3D) based on real scans where ground-truth for training is available (sceneflow, depth etc.)
 
 ## Progress
-
----
 
 :white_check_mark: panoramic image generation
 
