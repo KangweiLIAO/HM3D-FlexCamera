@@ -6,10 +6,11 @@ public class PointSpawnEditor : Editor {
     public override void OnInspectorGUI() {
         DrawDefaultInspector();
         PointSpawnController controller = (PointSpawnController)target;
+        EditorGUILayout.LabelField("Mesh Area: " + controller.meshArea);
         if (GUILayout.Button("Spawn Points")) {
-            controller.SpawnPoints();
+            controller.spawnStatus = true;
         } else if (GUILayout.Button("Stop Spawning")) {
-            controller.StopSpawnPoints();
+            controller.spawnStatus = false;
         }
     }
 }
