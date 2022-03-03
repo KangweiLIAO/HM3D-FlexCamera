@@ -2,7 +2,7 @@ using UnityEditor;
 using UnityEngine;
 
 [CustomEditor(typeof(MeshFilter))]
-public class DebugVisualizer : Editor {
+public class CustomMeshEditor : Editor {
 
     private const string EDITOR_NML_KEY = "_normals_length";
     private const string EDITOR_BBX_KEY = "_bounding_box";
@@ -54,5 +54,30 @@ public class DebugVisualizer : Editor {
             EditorPrefs.SetFloat(EDITOR_NML_KEY, normalsLength);
             EditorPrefs.SetBool(EDITOR_BBX_KEY, showBoundingBox);
         }
+        EditorGUILayout.BeginHorizontal();
+        if (GUILayout.Button("Rotate 90\u00B0")) {
+            RotateMeshX(90f);
+        }
+        if (GUILayout.Button("Rotate -90\u00B0")) {
+            RotateMeshX(-90f);
+        }
+        EditorGUILayout.EndHorizontal();
+    }
+
+    void RotateMeshX(float degree) {
+        // Fixes mesh's rotation after importing it from HM3D.
+        MeshFilter meshFilter = (MeshFilter)target;
+        Mesh mesh = meshFilter.sharedMesh;
+        Vector3[] vertices = mesh.vertices;
+        Vector3[] newVertices = new Vector3[vertices.Length];
+        Quaternion rotation = Quaternion.Euler(degree, 0f, 0f);
+        for (int i = 0; i < vertices.Length; i++) {
+            Vector3 vertex = vertices[i];
+            newVertices[i] = rotation * vertex;
+        }
+        mesh.vertices = newVertices;
+        mesh.RecalculateNormals();
+        mesh.RecalculateBounds();
+        EditorUtility.SetDirty(meshFilter);
     }
 }
