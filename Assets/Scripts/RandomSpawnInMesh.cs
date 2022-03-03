@@ -2,14 +2,13 @@ using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
-/// Class <c>RandomSpawnInMesh</c> add extension methods corresponding to spawning random
-/// points in a mesh to <c>Mesh</c> class. This script only made small changes to the script
-/// provided by Anisoropos's answer in https://answers.unity.com/questions/296458/random-position-inside-mesh.html.
+/// <para>Class <c>RandomSpawnInMesh</c> add extension methods corresponding to spawning random points in a mesh
+/// to <c>Mesh</c> class.</para> This script only made small changes to the script provided by Anisoropos's answer in 
+/// <see href="https://answers.unity.com/questions/296458/random-position-inside-mesh.html.">HERE</see>
 /// </summary>
 public static class RandomSpawnInMesh {
     /// <summary>
-    /// Picks a random point inside a CONVEX mesh.
-    /// Taking advantage of Convexity, we can produce more evenly distributed points
+    /// Returns a random point inside a CONVEX mesh
     /// </summary> 
     public static Vector3 GetRandomPointInConvex(this Mesh m) {
         // Grab two points on the surface
@@ -21,9 +20,7 @@ public static class RandomSpawnInMesh {
     }
 
     /// <summary>
-    /// Picks a random point inside a NON-CONVEX mesh.
-    /// The only way to get good approximations is by providing a point (if there is one)
-    /// that has line of sight to most other points in the non-convex shape.
+    /// Returns a random point inside a NON-CONVEX mesh.
     /// </summary> 
     public static Vector3 GetRandomPointInNonConvex(this Mesh m, Vector3 pointWhichSeesAll) {
         // Grab one point (and the center which we assume has line of sight with this point)
@@ -64,6 +61,7 @@ public static class RandomSpawnInMesh {
         Vector3 dBP = randPoint - vertexB;
         Vector3 dCP = randPoint - vertexC;
 
+        // Compare the vectors, if xP vectors are on the left side of the edges -> inside triangle
         if (Vector3.Cross(dAB, dAP).z >= 0
             && Vector3.Cross(dBC, dBP).z >= 0
             && Vector3.Cross(dCA, dCP).z >= 0) {
