@@ -6,13 +6,11 @@ public class CameraSpawnEditor : Editor {
     public override void OnInspectorGUI() {
         base.OnInspectorGUI();
         CameraSpawnController controller = (CameraSpawnController)target;
-        if (controller.meshArea >= 0) {
-            EditorGUILayout.LabelField("Mesh Area: " + controller.meshArea);
-        }
         
         if (!controller.startCombineMesh) {
             if (GUILayout.Button("Combine meshes under this object")) {
                 controller.Combine();
+                EditorGUILayout.LabelField("Mesh Area: " + controller.meshArea);
             }
         }
         if (!Application.isPlaying) {

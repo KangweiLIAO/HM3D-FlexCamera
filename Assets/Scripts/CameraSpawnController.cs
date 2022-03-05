@@ -1,7 +1,5 @@
 using UnityEngine;
-#if UNITY_EDITOR
 using UnityEditor;
-#endif
 using System.Collections.Generic;
 
 [ExecuteInEditMode]
@@ -35,14 +33,17 @@ public class CameraSpawnController : MonoBehaviour {
         }
     }
 
-    // Start is called before the first frame update
-    void Start() {
+    private void Awake() {
         mf = gameObject.GetComponent<MeshFilter>();
         if (!mf) {
             // create a mesh filter component for root object
             mf = gameObject.AddComponent<MeshFilter>();
         }
         points = new List<Point>();
+    }
+
+    void Start() {
+
     }
 
     void FixedUpdate() {
@@ -75,16 +76,15 @@ public class CameraSpawnController : MonoBehaviour {
     /// </summary>
     /// <param name="mesh">A mesh, usually is a combined mesh</param>
     void CreateCombinedMeshAssets(Mesh mesh) {
-#if UNITY_EDITOR
         // Find asset with name CombinedMesh in folder "Assets/Generated":
         string[] guids = AssetDatabase.FindAssets(gameObject.name, new[] { "Assets/Resources/CombinedMeshes/" });
-        foreach (var asset in guids) {
-            // Delete the old combined meshes
-            var path = AssetDatabase.GUIDToAssetPath(asset);
-            AssetDatabase.DeleteAsset(path);
+        if (guids.Length > 0)
+            AssetDatabase.DeleteAsset(guids[0]); // Delete the old combined meshes if there is one
+        try {
+            AssetDatabase.CreateAsset(mesh, "Assets/Resources/CombinedMeshes/" + gameObject.name + ".mat");
+        } catch {
+            Debug.LogError("Failed to create");
         }
-        AssetDatabase.CreateAsset(mesh, "Assets/Resources/CombinedMeshes/" + gameObject.name + ".mat");
-#endif
     }
 
     /// <summary>
@@ -95,7 +95,7 @@ public class CameraSpawnController : MonoBehaviour {
         Mesh cm = Resources.Load("CombinedMeshes/" + gameObject.name) as Mesh;
         if (cm) {
             // If combined mesh exist assign to root mesh filter
-            mf.mesh = cm;
+            mf.sharedMesh = cm;
             Debug.Log("Combined mesh for " + gameObject.name + " loaded");
         } else {
             MeshFilter[] meshFilters = gameObject.GetComponentsInChildren<MeshFilter>();
@@ -108,12 +108,12 @@ public class CameraSpawnController : MonoBehaviour {
                 }
             }
             if (combine.Length > 0) {
-                mf.mesh = new Mesh();   // Create a new mesh to apply combined mesh
-                mf.mesh.Clear();
+                mf.sharedMesh = new Mesh();   // Create a new mesh to apply combined mesh
+                mf.sharedMesh.Clear();
                 // Set UInt32 to contains large scale of verties:
-                mf.mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-                mf.mesh.CombineMeshes(combine);
-                CreateCombinedMeshAssets(mf.mesh);
+                mf.sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+                mf.sharedMesh.CombineMeshes(combine);
+                CreateCombinedMeshAssets(mf.sharedMesh);
             }
         }
     }
