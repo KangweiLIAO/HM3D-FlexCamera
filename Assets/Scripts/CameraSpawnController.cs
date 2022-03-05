@@ -1,25 +1,33 @@
 using UnityEngine;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using System.Collections.Generic;
 
+[ExecuteInEditMode]
 public class CameraSpawnController : MonoBehaviour {
-    public bool isConvex = false;
-    public bool combineMeshes = false;
     [Range(5, 200)]
     public int pointSpawnPerSec = 10; // points spawning rate (per second)
+    public bool isConvex = false;
 
     private MeshFilter mf;
     private List<Point> points;
 
-    private bool _spawning = false;
-    public bool spawnStatus { get { return _spawning; } set { _spawning = value; } }
+    private bool _spawning = false; // for spawning debug points
+    private bool _combining = false; // for combine sub-meshes
+
+    public bool startSpawning { get { return _spawning; } set { _spawning = value; } }
+    public bool startCombineMesh { get { return _combining; } set { _combining = value; } }
     public double meshArea {
         get {
-            if (!Application.isPlaying) return 0;
-            else return mf.mesh.GetTotalArea();
+            if (!mf.sharedMesh) return -1;
+            return mf.sharedMesh.GetTotalArea();
         }
     }
 
+    /// <summary>
+    /// Struct to store the debug points' properties
+    /// </summary>
     struct Point {
         public Vector3 pos;
         public Point(Vector3 pos) {
@@ -27,42 +35,14 @@ public class CameraSpawnController : MonoBehaviour {
         }
     }
 
-    void Awake() {
+    // Start is called before the first frame update
+    void Start() {
         mf = gameObject.GetComponent<MeshFilter>();
         if (!mf) {
             // create a mesh filter component for root object
             mf = gameObject.AddComponent<MeshFilter>();
         }
-    }
-
-    // Start is called before the first frame update
-    void Start() {
         points = new List<Point>();
-        if (combineMeshes) {
-            // if combine meshes checked
-            Mesh cm = Resources.Load("CombinedMeshes/" + gameObject.name) as Mesh;
-            if (cm) {
-                // if combined mesh exist assign to root mesh filter
-                mf.mesh = cm;
-                Debug.Log("Combined mesh for " + gameObject.name + " loaded");
-            } else {
-                MeshFilter[] meshFilters = gameObject.GetComponentsInChildren<MeshFilter>();
-                CombineInstance[] combine = new CombineInstance[meshFilters.Length];
-                for (int i = 0; i < meshFilters.Length; i++) {
-                    if (meshFilters[i].sharedMesh) {
-                        combine[i].mesh = meshFilters[i].sharedMesh;
-                        combine[i].transform = meshFilters[i].transform.localToWorldMatrix;
-                    }
-                }
-                if (combine.Length > 0) {
-                    mf.mesh = new Mesh();   // create a new mesh to apply combined mesh
-                    // set UInt32 to contains large scale of verties:
-                    mf.mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-                    mf.mesh.CombineMeshes(combine);
-                    CreateCombinedMeshAssets(mf.mesh);
-                }
-            }
-        }
     }
 
     void FixedUpdate() {
@@ -90,18 +70,58 @@ public class CameraSpawnController : MonoBehaviour {
             Gizmos.DrawSphere(transform.TransformPoint(p.pos), transform.lossyScale.magnitude / 100);
         }
     }
-
+    /// <summary>
+    /// Store the given mesh in resource folder
+    /// </summary>
+    /// <param name="mesh">A mesh, usually is a combined mesh</param>
     void CreateCombinedMeshAssets(Mesh mesh) {
-        // find asset with name CombinedMesh in folder "Assets/Generated":
+#if UNITY_EDITOR
+        // Find asset with name CombinedMesh in folder "Assets/Generated":
         string[] guids = AssetDatabase.FindAssets(gameObject.name, new[] { "Assets/Resources/CombinedMeshes/" });
         foreach (var asset in guids) {
-            // delete the old combined meshes
+            // Delete the old combined meshes
             var path = AssetDatabase.GUIDToAssetPath(asset);
             AssetDatabase.DeleteAsset(path);
         }
         AssetDatabase.CreateAsset(mesh, "Assets/Resources/CombinedMeshes/" + gameObject.name + ".mat");
+#endif
     }
 
+    /// <summary>
+    /// Combine submeshes under the parent object (which this script bind) and store the 
+    /// combined mesh in resource folder
+    /// </summary>
+    public void Combine() {
+        Mesh cm = Resources.Load("CombinedMeshes/" + gameObject.name) as Mesh;
+        if (cm) {
+            // If combined mesh exist assign to root mesh filter
+            mf.mesh = cm;
+            Debug.Log("Combined mesh for " + gameObject.name + " loaded");
+        } else {
+            MeshFilter[] meshFilters = gameObject.GetComponentsInChildren<MeshFilter>();
+            // -1 since the first elem in meshFilters[] is the parent object:
+            CombineInstance[] combine = new CombineInstance[meshFilters.Length - 1];
+            for (int i = 0; i < combine.Length; i++) {
+                if (meshFilters[i + 1].sharedMesh) {
+                    combine[i].mesh = meshFilters[i + 1].sharedMesh;
+                    combine[i].transform = meshFilters[i + 1].transform.localToWorldMatrix;
+                }
+            }
+            if (combine.Length > 0) {
+                mf.mesh = new Mesh();   // Create a new mesh to apply combined mesh
+                mf.mesh.Clear();
+                // Set UInt32 to contains large scale of verties:
+                mf.mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+                mf.mesh.CombineMeshes(combine);
+                CreateCombinedMeshAssets(mf.mesh);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Spawn and display the debug points where the camera will be spawned on
+    /// </summary>
+    /// <param name="numRays"></param>
     public void SpawnPoints(int numRays) {
         if (!Application.isPlaying) {
             Debug.LogError("Please enter play mode in order to start spawning");

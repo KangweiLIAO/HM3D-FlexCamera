@@ -64,6 +64,10 @@ public class CustomMeshEditor : Editor {
         EditorGUILayout.EndHorizontal();
     }
 
+    /// <summary>
+    /// Rotate the mesh with certain angle
+    /// </summary>
+    /// <param name="degree"></param>
     void RotateMeshX(float degree) {
         // Fixes mesh's rotation after importing it from HM3D.
         MeshFilter meshFilter = (MeshFilter)target;

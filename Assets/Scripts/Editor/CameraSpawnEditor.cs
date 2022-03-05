@@ -4,21 +4,29 @@ using UnityEngine;
 [CustomEditor(typeof(CameraSpawnController))]
 public class CameraSpawnEditor : Editor {
     public override void OnInspectorGUI() {
-        DrawDefaultInspector();
+        base.OnInspectorGUI();
         CameraSpawnController controller = (CameraSpawnController)target;
-        if (Application.isPlaying) {
+        if (controller.meshArea >= 0) {
             EditorGUILayout.LabelField("Mesh Area: " + controller.meshArea);
-            if (controller.spawnStatus) {
-                if (GUILayout.Button("Stop Spawning")) {
-                    controller.spawnStatus = false;
+        }
+        
+        if (!controller.startCombineMesh) {
+            if (GUILayout.Button("Combine meshes under this object")) {
+                controller.Combine();
+            }
+        }
+        if (!Application.isPlaying) {
+            EditorGUILayout.HelpBox("Enter the play mode to spawn debug points", MessageType.Warning);
+        } else {
+            if (controller.startSpawning) {
+                if (GUILayout.Button("Stop Points Spawning")) {
+                    controller.startSpawning = false;
                 }
             } else {
-                if (GUILayout.Button("Spawn Points")) {
-                    controller.spawnStatus = true;
+                if (GUILayout.Button("Spawn Debug Points")) {
+                    controller.startSpawning = true;
                 }
             }
-        } else {
-            EditorGUILayout.HelpBox("Random point spawn only avaliable in play mode!", MessageType.Warning);
         }
     }
 }
