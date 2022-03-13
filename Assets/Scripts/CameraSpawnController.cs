@@ -5,7 +5,7 @@ using System.Collections.Generic;
 [ExecuteInEditMode]
 public class CameraSpawnController : MonoBehaviour {
     [Range(5, 200)]
-    public int pointSpawnPerSec = 10; // points spawning rate (per second)
+    public int pointSpawnPerSec = 100; // points spawning rate (per second)
     public bool isConvex = false;
 
     private MeshFilter mf;
@@ -42,23 +42,9 @@ public class CameraSpawnController : MonoBehaviour {
         points = new List<Point>();
     }
 
-    void Start() {
-
-    }
-
     void FixedUpdate() {
         if (_spawning) {
             SpawnPoints(Mathf.CeilToInt(pointSpawnPerSec * Time.fixedDeltaTime));
-            //foreach (Point p in points) {
-            //    // initiate a camera at the point
-
-            //    // capture the cube map at the point
-
-            //    // spawn a sphere/cube to apply the cubemap
-
-            //    // delete the camera
-
-            //}
         }
     }
 

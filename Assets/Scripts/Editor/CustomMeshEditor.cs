@@ -3,13 +3,15 @@ using UnityEngine;
 
 [CustomEditor(typeof(MeshFilter))]
 public class CustomMeshEditor : Editor {
-
-    private const string EDITOR_NML_KEY = "_normals_length";
     private const string EDITOR_BBX_KEY = "_bounding_box";
+    private const string EDITOR_SNM_KEY = "_show_normals";
+    private const string EDITOR_NML_KEY = "_normals_length";
+
     private Mesh mesh;
     private MeshFilter mf;
     private Vector3[] verts;
     private Vector3[] normals;
+    private bool showNormals = false;
     private float normalsLength = 1f;
     private bool showBoundingBox = false;
 
@@ -18,8 +20,9 @@ public class CustomMeshEditor : Editor {
         if (mf != null) {
             mesh = mf.sharedMesh;
         }
-        normalsLength = EditorPrefs.GetFloat(EDITOR_NML_KEY);
         showBoundingBox = EditorPrefs.GetBool(EDITOR_BBX_KEY);
+        showNormals = EditorPrefs.GetBool(EDITOR_SNM_KEY);
+        normalsLength = EditorPrefs.GetFloat(EDITOR_NML_KEY);
     }
 
     private void OnSceneGUI() {
@@ -37,7 +40,7 @@ public class CustomMeshEditor : Editor {
                 Handles.DrawWireCube(mesh.bounds.center, mesh.bounds.size);
             }
 
-            if (normalsLength != 0) {
+            if (showNormals) {
                 for (int i = 0; i < len; i++) {
                     Handles.DrawLine(verts[i], verts[i] + normals[i] * normalsLength);
                 }
@@ -49,10 +52,12 @@ public class CustomMeshEditor : Editor {
         base.OnInspectorGUI();
         EditorGUI.BeginChangeCheck();
         showBoundingBox = EditorGUILayout.Toggle("Show bounding box", showBoundingBox);
+        showNormals = EditorGUILayout.Toggle("Show normals", showNormals);
         normalsLength = EditorGUILayout.FloatField("Normals length", normalsLength);
         if (EditorGUI.EndChangeCheck()) {
             EditorPrefs.SetFloat(EDITOR_NML_KEY, normalsLength);
             EditorPrefs.SetBool(EDITOR_BBX_KEY, showBoundingBox);
+            EditorPrefs.SetBool(EDITOR_SNM_KEY, showNormals);
         }
         EditorGUILayout.BeginHorizontal();
         if (GUILayout.Button("Rotate 90\u00B0")) {
@@ -65,7 +70,7 @@ public class CustomMeshEditor : Editor {
     }
 
     /// <summary>
-    /// Rotate the mesh with certain angle
+    /// Rotate the mesh around X-axis with certain angle
     /// </summary>
     /// <param name="degree"></param>
     void RotateMeshX(float degree) {

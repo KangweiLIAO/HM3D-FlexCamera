@@ -878,8 +878,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7f2ba3926df51504690a129bda76ec85, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pointSpawnPerSec: 100
-  isConvex: 1
+  pointSpawnPerSec: 10
+  isConvex: 0
 --- !u!1001 &1775813596
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -970,13 +970,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1775813597}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7f2ba3926df51504690a129bda76ec85, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pointSpawnPerSec: 10
-  isConvex: 0
+  pointSpawnPerSec: 200
+  isConvex: 1
 --- !u!43 &1820561493
 Mesh:
   m_ObjectHideFlags: 0
