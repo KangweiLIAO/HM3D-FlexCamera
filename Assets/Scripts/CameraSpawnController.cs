@@ -78,11 +78,12 @@ public class CameraSpawnController : MonoBehaviour {
     /// combined mesh in resource folder
     /// </summary>
     public void Combine() {
+        _combining = true;
         Mesh cm = Resources.Load("CombinedMeshes/" + gameObject.name) as Mesh;
         if (cm) {
             // If combined mesh exist assign to root mesh filter
             mf.sharedMesh = cm;
-            Debug.Log("Combined mesh for " + gameObject.name + " loaded");
+            Debug.Log("Combined mesh for " + gameObject.name + " detected and loaded");
         } else {
             MeshFilter[] meshFilters = gameObject.GetComponentsInChildren<MeshFilter>();
             // -1 since the first elem in meshFilters[] is the parent object:
@@ -102,6 +103,7 @@ public class CameraSpawnController : MonoBehaviour {
                 CreateCombinedMeshAssets(mf.sharedMesh);
             }
         }
+        _combining = false;
     }
 
     /// <summary>

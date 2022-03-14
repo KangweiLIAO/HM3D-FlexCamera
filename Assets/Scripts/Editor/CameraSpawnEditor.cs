@@ -8,13 +8,15 @@ public class CameraSpawnEditor : Editor {
         CameraSpawnController controller = (CameraSpawnController)target;
         
         if (!controller.startCombineMesh) {
-            if (GUILayout.Button("Combine meshes under this object")) {
+            if (GUILayout.Button("Combine meshes")) {
                 controller.Combine();
                 EditorGUILayout.LabelField("Mesh Area: " + controller.meshArea);
             }
         }
         if (!Application.isPlaying) {
+            EditorGUILayout.Space();
             EditorGUILayout.HelpBox("Enter the play mode to spawn debug points", MessageType.Warning);
+            EditorGUILayout.Space();
         } else {
             if (controller.startSpawning) {
                 if (GUILayout.Button("Stop Points Spawning")) {

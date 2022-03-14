@@ -53,12 +53,15 @@ public class CustomMeshEditor : Editor {
         EditorGUI.BeginChangeCheck();
         showBoundingBox = EditorGUILayout.Toggle("Show bounding box", showBoundingBox);
         showNormals = EditorGUILayout.Toggle("Show normals", showNormals);
-        normalsLength = EditorGUILayout.FloatField("Normals length", normalsLength);
+        normalsLength = EditorGUILayout.Slider(label:"Normals length", normalsLength, 0, 1);
         if (EditorGUI.EndChangeCheck()) {
             EditorPrefs.SetFloat(EDITOR_NML_KEY, normalsLength);
             EditorPrefs.SetBool(EDITOR_BBX_KEY, showBoundingBox);
             EditorPrefs.SetBool(EDITOR_SNM_KEY, showNormals);
         }
+        EditorGUILayout.Space();
+        EditorGUILayout.HelpBox("Rotate if combined mesh does not match.", MessageType.Info);
+        EditorGUILayout.Space();
         EditorGUILayout.BeginHorizontal();
         if (GUILayout.Button("Rotate 90\u00B0")) {
             RotateMeshX(90f);
