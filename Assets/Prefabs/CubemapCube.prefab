@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 2595416566274665829}
   - component: {fileID: 2595416566274665828}
   - component: {fileID: 2958945070825552569}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: CubemapCube
   m_TagString: Cubemap Object
   m_Icon: {fileID: 0}
@@ -112,7 +112,7 @@ GameObject:
   - component: {fileID: 2595416566874455048}
   - component: {fileID: 2595416566874455047}
   - component: {fileID: 2595416566874455049}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Cube Cam
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -143,7 +143,7 @@ Camera:
   m_GameObject: {fileID: 2595416566874455051}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
+  m_ClearFlags: 2
   m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
@@ -158,8 +158,8 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.1
-  far clip plane: 1000
-  field of view: 60
+  far clip plane: 100
+  field of view: 50
   orthographic: 0
   orthographic size: 5
   m_Depth: 0

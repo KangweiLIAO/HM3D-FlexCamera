@@ -15,6 +15,8 @@ public class CameraSpawnController : MonoBehaviour {
 
     public List<Point> points;
 
+    private CameraViewController viewController;
+
     private MeshFilter combinedMF;
 
     private int totalCapture = 0;
@@ -23,8 +25,8 @@ public class CameraSpawnController : MonoBehaviour {
     private bool _debugging = false; // for spawning debug points
     public bool startDebugging { get => _debugging; set => _debugging = value; }
 
-    private bool _spawning = false; // for spawning cameras
-    public bool startSpawning { get => _spawning; set => _spawning = value; }
+    private State _state = State.Idle; // for spawning cameras
+    public State getState { get => _state; set => _state = value; }
 
     private int maxCameraSpawn = 20;
     public int setMaxCameraSpawn { get => maxCameraSpawn; set => maxCameraSpawn = value; }
@@ -39,7 +41,14 @@ public class CameraSpawnController : MonoBehaviour {
         }
     }
 
+    public enum State {
+        Idle,
+        Spawning,
+        Finish
+    }
+
     void Start() {
+        viewController = GameObject.Find("Camera Controller").GetComponent<CameraViewController>();
         combinedMF = gameObject.GetComponent<MeshFilter>();
         if (!combinedMF) {
             // create a mesh filter component for root object
@@ -53,9 +62,7 @@ public class CameraSpawnController : MonoBehaviour {
         if (_debugging) {
             SpawnPoints(Mathf.CeilToInt(pointSpawnPerSec * Time.fixedDeltaTime));
         }
-        if (_spawning) {
-            SpawnCameras();
-        }
+        SpawnCameras();
     }
 
     void OnDrawGizmos() {
@@ -64,7 +71,7 @@ public class CameraSpawnController : MonoBehaviour {
 
         foreach (Point p in points) {
             Gizmos.color = Color.red;
-            Gizmos.DrawSphere(transform.TransformPoint(p.pos), transform.lossyScale.magnitude / 100);
+            Gizmos.DrawWireCube(transform.TransformPoint(p.pos), new Vector3(1, 1, 1));
         }
     }
 
@@ -141,20 +148,15 @@ public class CameraSpawnController : MonoBehaviour {
 
     void SpawnCameraAt(Point p, int limitPerLine) {
         // Create a temporary camera to capture cubemap at a random point
-        GameObject camObj = Instantiate(new GameObject("tmp_camera" + totalCapture));
-        Camera tmpCam = camObj.AddComponent<Camera>();
+        GameObject camObj = Instantiate(captureCameraPrefab);
+        camObj.name = "tmp_camera_" + totalCapture;
+        Camera tmpCam = camObj.GetComponent<Camera>();
         camObj.transform.position = p.pos;// move camera to a random point
 
         // Create a sphere/cube to apply cubemap on
         GameObject cubeInst = Instantiate(cubemapSpawnPrefab);
-        cubeInst.transform.position = startPoint.transform.position;
-
-        CubemapController mapControl = cubeInst.GetComponent<CubemapController>();
-        mapControl.targetCam = tmpCam;
-        mapControl.cubemapIndex = totalCapture;
-        mapControl.CaptureCubemapTexture(); // capture cubemap base on tmp camera
-        Destroy(camObj); // Destroy tmp camera to avoid redundancy
-
+        cubeInst.name = "cubemap_cube_" + totalCapture;
+        cubeInst.transform.GetChild(0).name = "cubemap_camera_" + totalCapture;
         if (limitHelper < limitPerLine) {
             startPoint.transform.position += startPoint.transform.forward * 2;
         } else {
@@ -163,20 +165,33 @@ public class CameraSpawnController : MonoBehaviour {
             startPoint.transform.position += startPoint.transform.right * 2;
             limitHelper = 0;
         }
+        cubeInst.transform.position = startPoint.transform.position;
+
+        CubemapController mapControl = cubeInst.GetComponent<CubemapController>();
+        mapControl.targetCam = tmpCam;
+        mapControl.cubemapIndex = totalCapture;
+        mapControl.CaptureCubemapTexture(); // capture cubemap base on tmp camera
+        Destroy(camObj); // Destroy tmp camera to avoid redundancy
 
         MeshRenderer mr = cubeInst.GetComponent<MeshRenderer>();
         mr.material = mapControl.cubemapMaterial;
         limitHelper++;
-        totalCapture++;
     }
 
     public void SpawnCameras(int limitPerLine = 10) {
-        if (totalCapture < maxCameraSpawn) {
+        if (_state == State.Finish) {
+            viewController.InitCameras();
+            _state = State.Idle;
+        }
+        if (_state == State.Spawning && totalCapture < maxCameraSpawn) {
             SpawnPoints(Mathf.CeilToInt(Time.fixedDeltaTime));
             foreach (Point p in points) {
                 SpawnCameraAt(p, limitPerLine);
+                totalCapture++;
             }
-            points.Clear();
+            //points.Clear();
+        } else if (!(_state == State.Idle)) {
+            _state = State.Finish;
         }
     }
 

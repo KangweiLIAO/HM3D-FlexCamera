@@ -32,18 +32,19 @@ public class CameraSpawnEditor : Editor {
                     controller.startDebugging = false;
                 }
             } else {
-                if (GUILayout.Button("Spawn Debug Points") && !controller.startSpawning) {
+                if (GUILayout.Button("Spawn Debug Points")
+                    && !(controller.getState == CameraSpawnController.State.Spawning)) {
                     controller.startDebugging = true;
                 }
             }
             EditorGUILayout.Space();
-            if (controller.startSpawning) {
+            if (controller.getState == CameraSpawnController.State.Spawning) {
                 if (GUILayout.Button("Stop Cameras Spawning")) {
-                    controller.startSpawning = false;
+                    controller.getState = CameraSpawnController.State.Idle;
                 }
             } else {
                 if (GUILayout.Button("Spawn Cameras") && !controller.startDebugging) {
-                    controller.startSpawning = true;
+                    controller.getState = CameraSpawnController.State.Spawning;
                 }
             }
         }

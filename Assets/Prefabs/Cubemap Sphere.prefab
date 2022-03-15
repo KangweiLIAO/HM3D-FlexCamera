@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 7764062705665987422}
   - component: {fileID: 7764062705665987423}
   - component: {fileID: 7764062705665987417}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Sphere Cam
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -130,7 +130,7 @@ GameObject:
   - component: {fileID: 7764062706571907794}
   - component: {fileID: 7764062706571907795}
   - component: {fileID: 6916142669991994451}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Cubemap Sphere
   m_TagString: Cubemap Object
   m_Icon: {fileID: 0}
