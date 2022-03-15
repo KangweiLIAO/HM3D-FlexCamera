@@ -81,27 +81,4 @@ public static class RandomSpawnInMesh {
         }
         return randPoint;
     }
-
-    /// <summary>
-    /// Calculate the total mesh area of a mesh
-    /// </summary>
-    /// <param name="mesh"></param>
-    /// <returns></returns>
-    public static double GetTotalArea(this Mesh mesh) {
-        Vector3[] verts = mesh.vertices;
-        int[] triangles = mesh.triangles;
-        double meshArea = 0;
-        List<double> areas = new List<double>();
-        for (int i = 0; i < triangles.Length; i += 3) {
-            double area = 0.0;
-            Vector3 corner = verts[triangles[i]];
-            Vector3 edge1 = verts[triangles[i + 1]] - corner;
-            Vector3 edge2 = verts[triangles[i + 2]] - corner;
-            area += Vector3.Cross(edge1, edge2).magnitude;
-            areas.Add(area / 2); // add each triangle's area into the list
-            meshArea += area;
-        }
-        meshArea /= 2;
-        return meshArea;
-    }
 }

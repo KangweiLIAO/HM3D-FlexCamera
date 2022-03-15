@@ -26,14 +26,8 @@ public class CameraSpawnController : MonoBehaviour {
     private bool _spawning = false; // for spawning cameras
     public bool startSpawning { get => _spawning; set => _spawning = value; }
 
-    public int setMaxSpawn { get; set; }
-
-    public double meshArea {
-        get {
-            if (!combinedMF) return -1;
-            return combinedMF.sharedMesh.GetTotalArea();
-        }
-    }
+    private int maxCameraSpawn = 20;
+    public int setMaxCameraSpawn { get => maxCameraSpawn; set => maxCameraSpawn = value; }
 
     /// <summary>
     /// Struct to store the debug points' properties
@@ -149,7 +143,7 @@ public class CameraSpawnController : MonoBehaviour {
         // Create a temporary camera to capture cubemap at a random point
         GameObject camObj = Instantiate(new GameObject("tmp_camera" + totalCapture));
         Camera tmpCam = camObj.AddComponent<Camera>();
-        camObj.transform.position = p.pos;
+        camObj.transform.position = p.pos;// move camera to a random point
 
         // Create a sphere/cube to apply cubemap on
         GameObject cubeInst = Instantiate(cubemapSpawnPrefab);
@@ -177,7 +171,7 @@ public class CameraSpawnController : MonoBehaviour {
     }
 
     public void SpawnCameras(int limitPerLine = 10) {
-        if (totalCapture < setMaxSpawn) {
+        if (totalCapture < maxCameraSpawn) {
             SpawnPoints(Mathf.CeilToInt(Time.fixedDeltaTime));
             foreach (Point p in points) {
                 SpawnCameraAt(p, limitPerLine);

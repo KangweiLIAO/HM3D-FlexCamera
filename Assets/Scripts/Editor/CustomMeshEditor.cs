@@ -29,18 +29,16 @@ public class CustomMeshEditor : Editor {
         if (mesh == null) {
             return;
         } else {
-            Handles.matrix = mf.transform.localToWorldMatrix;
-            Handles.color = Color.yellow;
-            verts = mesh.vertices;
-            normals = mesh.normals;
-            int len = mesh.vertexCount;
-
-            // Draw the bounding box of selected mesh:
             if (showBoundingBox) {
+                // Draw the bounding box of selected mesh:
                 Handles.DrawWireCube(mesh.bounds.center, mesh.bounds.size);
             }
-
             if (showNormals) {
+                Handles.matrix = mf.transform.localToWorldMatrix;
+                Handles.color = Color.yellow;
+                verts = mesh.vertices;
+                normals = mesh.normals;
+                int len = mesh.vertexCount;
                 for (int i = 0; i < len; i++) {
                     Handles.DrawLine(verts[i], verts[i] + normals[i] * normalsLength);
                 }
