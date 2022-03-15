@@ -4,47 +4,63 @@ using System.Collections.Generic;
 
 [ExecuteInEditMode]
 public class CameraSpawnController : MonoBehaviour {
-    [Range(5, 200)]
-    public int pointSpawnPerSec = 100; // points spawning rate (per second)
-    public bool isConvex = false;
+    [SerializeField]
+    private GameObject startPoint;
+    [SerializeField]
+    private GameObject captureCameraPrefab;
+    [SerializeField]
+    private GameObject cubemapSpawnPrefab;
+    [Range(1, 200)]
+    public int pointSpawnPerSec = 10; // points spawning rate (per second)
 
-    private MeshFilter mf;
-    private List<Point> points;
+    public List<Point> points;
 
-    private bool _spawning = false; // for spawning debug points
-    private bool _combining = false; // for combine sub-meshes
+    private MeshFilter combinedMF;
 
-    public bool startSpawning { get { return _spawning; } set { _spawning = value; } }
-    public bool startCombineMesh { get { return _combining; } set { _combining = value; } }
+    private int totalCapture = 0;
+    private int limitHelper = 0;
+
+    private bool _debugging = false; // for spawning debug points
+    public bool startDebugging { get => _debugging; set => _debugging = value; }
+
+    private bool _spawning = false; // for spawning cameras
+    public bool startSpawning { get => _spawning; set => _spawning = value; }
+
+    public int setMaxSpawn { get; set; }
+
     public double meshArea {
         get {
-            if (!mf.sharedMesh) return -1;
-            return mf.sharedMesh.GetTotalArea();
+            if (!combinedMF) return -1;
+            return combinedMF.sharedMesh.GetTotalArea();
         }
     }
 
     /// <summary>
     /// Struct to store the debug points' properties
     /// </summary>
-    struct Point {
+    public struct Point {
         public Vector3 pos;
         public Point(Vector3 pos) {
             this.pos = pos;
         }
     }
 
-    private void Awake() {
-        mf = gameObject.GetComponent<MeshFilter>();
-        if (!mf) {
+    void Start() {
+        combinedMF = gameObject.GetComponent<MeshFilter>();
+        if (!combinedMF) {
             // create a mesh filter component for root object
-            mf = gameObject.AddComponent<MeshFilter>();
+            combinedMF = gameObject.AddComponent<MeshFilter>();
         }
         points = new List<Point>();
+        Clean();
     }
 
     void FixedUpdate() {
-        if (_spawning) {
+        if (_debugging) {
             SpawnPoints(Mathf.CeilToInt(pointSpawnPerSec * Time.fixedDeltaTime));
+        }
+        if (_spawning) {
+            SpawnCameras();
         }
     }
 
@@ -57,6 +73,11 @@ public class CameraSpawnController : MonoBehaviour {
             Gizmos.DrawSphere(transform.TransformPoint(p.pos), transform.lossyScale.magnitude / 100);
         }
     }
+
+    void OnApplicationQuit() {
+        Clean();
+    }
+
     /// <summary>
     /// Store the given mesh in resource folder
     /// </summary>
@@ -74,15 +95,14 @@ public class CameraSpawnController : MonoBehaviour {
     }
 
     /// <summary>
-    /// Combine submeshes under the parent object (which this script bind) and store the 
+    /// Combine submeshes under the house parent object (which this script bind) and store the 
     /// combined mesh in resource folder
     /// </summary>
     public void Combine() {
-        _combining = true;
         Mesh cm = Resources.Load("CombinedMeshes/" + gameObject.name) as Mesh;
         if (cm) {
             // If combined mesh exist assign to root mesh filter
-            mf.sharedMesh = cm;
+            combinedMF.sharedMesh = cm;
             Debug.Log("Combined mesh for " + gameObject.name + " detected and loaded");
         } else {
             MeshFilter[] meshFilters = gameObject.GetComponentsInChildren<MeshFilter>();
@@ -95,15 +115,14 @@ public class CameraSpawnController : MonoBehaviour {
                 }
             }
             if (combine.Length > 0) {
-                mf.sharedMesh = new Mesh();   // Create a new mesh to apply combined mesh
-                mf.sharedMesh.Clear();
+                combinedMF.sharedMesh = new Mesh();   // Create a new mesh to apply combined mesh
+                combinedMF.sharedMesh.Clear();
                 // Set UInt32 to contains large scale of verties:
-                mf.sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-                mf.sharedMesh.CombineMeshes(combine);
-                CreateCombinedMeshAssets(mf.sharedMesh);
+                combinedMF.sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+                combinedMF.sharedMesh.CombineMeshes(combine);
+                CreateCombinedMeshAssets(combinedMF.sharedMesh);
             }
         }
-        _combining = false;
     }
 
     /// <summary>
@@ -115,14 +134,74 @@ public class CameraSpawnController : MonoBehaviour {
             Debug.LogError("Please enter play mode in order to start spawning");
             return;
         }
-        if (!mf) {
+        if (!combinedMF) {
             Debug.LogError("A MeshFilter component is required for points spawning in the object " + gameObject.name);
             return;
         }
         for (int i = 0; i < numRays; i++) {
-            Vector3 point = isConvex ?
-                mf.mesh.GetRandomPointInConvex() : mf.mesh.GetRandomPointInNonConvex(mf.mesh.GetCenter());
+            Vector3 point = combinedMF.mesh.GetRandomPointInConvex();
             points.Add(new Point(point));
+
+        }
+    }
+
+    void SpawnCameraAt(Point p, int limitPerLine) {
+        // Create a temporary camera to capture cubemap at a random point
+        GameObject camObj = Instantiate(new GameObject("tmp_camera" + totalCapture));
+        Camera tmpCam = camObj.AddComponent<Camera>();
+        camObj.transform.position = p.pos;
+
+        // Create a sphere/cube to apply cubemap on
+        GameObject cubeInst = Instantiate(cubemapSpawnPrefab);
+
+        CubemapController mapControl = cubeInst.GetComponent<CubemapController>();
+        mapControl.targetCam = tmpCam;
+        mapControl.cubemapIndex = totalCapture;
+        mapControl.CaptureCubemapTexture(); // capture cubemap base on tmp camera
+        Destroy(camObj); // Destroy tmp camera to avoid redundancy
+
+        if (limitHelper < limitPerLine) {
+            startPoint.transform.position += startPoint.transform.forward * 2;
+        } else {
+            // next line of prefabs
+            startPoint.transform.position -= startPoint.transform.forward * 2 * (limitPerLine - 1);
+            startPoint.transform.position += startPoint.transform.right * 2;
+            limitHelper = 0;
+        }
+        cubeInst.transform.position = startPoint.transform.position;
+
+        MeshRenderer mr = cubeInst.GetComponent<MeshRenderer>();
+        mr.material = mapControl.cubemapMaterial;
+        limitHelper++;
+        totalCapture++;
+    }
+
+    public void SpawnCameras(int limitPerLine = 10) {
+        if (totalCapture < setMaxSpawn) {
+            SpawnPoints(Mathf.CeilToInt(Time.fixedDeltaTime));
+            foreach (Point p in points) {
+                SpawnCameraAt(p, limitPerLine);
+            }
+            points.Clear();
+        }
+    }
+
+    /// <summary>
+    /// Clean all materials and cubemaps
+    /// </summary>
+    public void Clean() {
+        // find asset with name Cubemap, type of renderTexture in folder "Assets/Textures":
+        string[] textureGuids = AssetDatabase.FindAssets("cubemap_ t:renderTexture", new[] { "Assets/Textures" });
+        foreach (var asset in textureGuids) {
+            // delete the old cubemap textures
+            var path = AssetDatabase.GUIDToAssetPath(asset);
+            AssetDatabase.DeleteAsset(path);
+        }
+        string[] materialGuids = AssetDatabase.FindAssets("material_ t:material", new[] { "Assets/Materials" });
+        foreach (var asset in materialGuids) {
+            // delete the old cubemap materials
+            var path = AssetDatabase.GUIDToAssetPath(asset);
+            AssetDatabase.DeleteAsset(path);
         }
     }
 }

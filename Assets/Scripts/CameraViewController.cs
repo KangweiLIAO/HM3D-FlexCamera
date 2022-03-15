@@ -1,7 +1,6 @@
 using UnityEngine;
 
 public class CameraViewController : MonoBehaviour {
-
     [Range(1, 100)]
     public float rotateSpeed = 50f;
     [HideInInspector]
@@ -28,17 +27,19 @@ public class CameraViewController : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-        rotation += new Vector2(-Input.GetAxis("Mouse Y"), Input.GetAxis("Mouse X"));
-        cameras[currCamIndex].transform.eulerAngles = rotation * rotateSpeed / 10;
+        if (cameras.Length > 0) {
+            rotation += new Vector2(-Input.GetAxis("Mouse Y"), Input.GetAxis("Mouse X"));
+            cameras[currCamIndex].transform.eulerAngles = rotation * rotateSpeed / 10;
 
-        if (Input.GetKeyDown(KeyCode.C)) {
-            // switch to next camera
-            currCamIndex++;
-            if (currCamIndex >= cameras.Length)
-                currCamIndex = 0;
-            cameras[currCamIndex - 1].gameObject.SetActive(false);
-            cameras[currCamIndex].gameObject.SetActive(true);
-            Debug.Log("Camera (" + cameras[currCamIndex].name + ") enabled");
+            if (Input.GetKeyDown(KeyCode.C)) {
+                // switch to next camera
+                currCamIndex++;
+                if (currCamIndex >= cameras.Length)
+                    currCamIndex = 0;
+                cameras[currCamIndex - 1].gameObject.SetActive(false);
+                cameras[currCamIndex].gameObject.SetActive(true);
+                Debug.Log("Camera (" + cameras[currCamIndex].name + ") enabled");
+            }
         }
     }
 }

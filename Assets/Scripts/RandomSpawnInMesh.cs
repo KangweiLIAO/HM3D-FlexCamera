@@ -7,6 +7,19 @@ using System.Collections.Generic;
 /// <see href="https://answers.unity.com/questions/296458/random-position-inside-mesh.html.">HERE</see>
 /// </summary>
 public static class RandomSpawnInMesh {
+
+    /// <summary>
+    /// Returns the center of a mesh
+    /// </summary>
+    /// <param name="mesh"></param>
+    /// <returns></returns>    
+    public static Vector3 GetCenter(this Mesh mesh) {
+        Vector3 center = Vector3.zero;
+        foreach (Vector3 v in mesh.vertices)
+            center += v;
+        return center / mesh.vertexCount;
+    }
+
     /// <summary>
     /// Returns a random point inside a CONVEX mesh
     /// </summary> 
@@ -20,18 +33,11 @@ public static class RandomSpawnInMesh {
     }
 
     /// <summary>
-    /// Returns a random point inside a NON-CONVEX mesh.
-    /// </summary> 
-    public static Vector3 GetRandomPointInNonConvex(this Mesh m, Vector3 pointWhichSeesAll) {
-        // Grab one point (and the center which we assume has line of sight with this point)
-        Vector3 randomPointOnSurface = m.GetRandomPointOnSurface();
-
-        // Interpolate between them
-        return Vector3.Lerp(pointWhichSeesAll, randomPointOnSurface, Random.Range(0f, 1f));
-    }
-
+    /// Pick a random point on a triangle in given mesh (http://mathworld.wolfram.com/TrianglePointPicking.html)
+    /// </summary>
+    /// <param name="m"></param>
+    /// <returns></returns>
     public static Vector3 GetRandomPointOnSurface(this Mesh m) {
-        // Pick a random point on the triangle (http://mathworld.wolfram.com/TrianglePointPicking.html)
         // Each triangle is 3 integers in a row in Mesh.triangles, so Random(0.. mesh.triangles.Length / 3) * 3
         // will give a random triangle's origin
         int triangleOrigin = Mathf.FloorToInt(Random.Range(0f, m.triangles.Length) / 3f) * 3;
@@ -77,18 +83,13 @@ public static class RandomSpawnInMesh {
     }
 
     /// <summary>
-    /// Returns the mesh's center.
-    /// </summary> 
-    public static Vector3 GetCenter(this Mesh m) {
-        Vector3 center = Vector3.zero;
-        foreach (Vector3 v in m.vertices)
-            center += v;
-        return center / m.vertexCount;
-    }
-
-    public static double GetTotalArea(this Mesh m) {
-        Vector3[] verts = m.vertices;
-        int[] triangles = m.triangles;
+    /// Calculate the total mesh area of a mesh
+    /// </summary>
+    /// <param name="mesh"></param>
+    /// <returns></returns>
+    public static double GetTotalArea(this Mesh mesh) {
+        Vector3[] verts = mesh.vertices;
+        int[] triangles = mesh.triangles;
         double meshArea = 0;
         List<double> areas = new List<double>();
         for (int i = 0; i < triangles.Length; i += 3) {

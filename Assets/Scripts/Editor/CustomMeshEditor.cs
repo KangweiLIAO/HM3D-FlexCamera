@@ -60,7 +60,7 @@ public class CustomMeshEditor : Editor {
             EditorPrefs.SetBool(EDITOR_SNM_KEY, showNormals);
         }
         EditorGUILayout.Space();
-        EditorGUILayout.HelpBox("Rotate if combined mesh does not match.", MessageType.Info);
+        EditorGUILayout.HelpBox("Rotate if the combined mesh does not match.", MessageType.Info);
         EditorGUILayout.Space();
         EditorGUILayout.BeginHorizontal();
         if (GUILayout.Button("Rotate 90\u00B0")) {
