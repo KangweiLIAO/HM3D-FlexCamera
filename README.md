@@ -12,10 +12,10 @@ Flexible camera configurations (regular pinhole, fisheye and panoramic lenses) i
 
 :white_check_mark: panoramic image generation
 
-:white_check_mark: generation of cube map for a camera
+:white_check_mark: generate cube map for a camera
 
-:white_check_mark: Random points inside HM3D models
+:white_check_mark: Random debug points spawn inside HM3D models
 
-:x: Cameras spawn on random points
+:white_check_mark: Cameras spawn on random points
 
-:x: Fisheye Camera effect (without post-processing)
+:x: Fisheye Camera effect
