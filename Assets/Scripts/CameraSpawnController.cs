@@ -147,6 +147,7 @@ public class CameraSpawnController : MonoBehaviour {
 
         // Create a sphere/cube to apply cubemap on
         GameObject cubeInst = Instantiate(cubemapSpawnPrefab);
+        cubeInst.transform.position = startPoint.transform.position;
 
         CubemapController mapControl = cubeInst.GetComponent<CubemapController>();
         mapControl.targetCam = tmpCam;
@@ -162,7 +163,6 @@ public class CameraSpawnController : MonoBehaviour {
             startPoint.transform.position += startPoint.transform.right * 2;
             limitHelper = 0;
         }
-        cubeInst.transform.position = startPoint.transform.position;
 
         MeshRenderer mr = cubeInst.GetComponent<MeshRenderer>();
         mr.material = mapControl.cubemapMaterial;
