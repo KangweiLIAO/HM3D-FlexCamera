@@ -18,4 +18,4 @@ Flexible camera configurations (regular pinhole, fisheye and panoramic lenses) i
 
 :white_check_mark: Cameras spawn on random points
 
-:x: Fisheye Camera effect
+:white_check_mark: Fisheye Camera effect
