@@ -29,7 +29,7 @@ Shader "Unlit/InverseCullCubeMapShader"
 			{
 				v2f o;
 				o.pos = UnityObjectToClipPos(v.vertex);
-				o.uv = v.vertex.xyz * half3(1,1,1); // mirror so cubemap projects as expected
+				o.uv = v.vertex.xyz * half3(1,1,1);
 				return o;
 			}
 

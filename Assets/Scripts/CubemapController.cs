@@ -16,7 +16,11 @@ public class CubemapController : MonoBehaviour {
     void Awake() {
         cubemapMaterial = new Material(cubemapShader);
     }
-
+    
+    /// <summary>
+    /// Captures a cubemap texture base on the target camera
+    /// </summary>
+    /// <returns>captured render texture</returns>
     public RenderTexture CaptureCubemapTexture() {
         RenderTexture cubemap = new RenderTexture(4096, 4096, 32);
         if (targetCam) {
@@ -35,6 +39,9 @@ public class CubemapController : MonoBehaviour {
         return cubemap;
     }
 
+    /// <summary>
+    /// Captures a panorama texture base on the target camera
+    /// </summary>
     public void CapturePanoramaPicture() {
         RenderTexture cubemapRT = CaptureCubemapTexture(); // to store cubemap texture
         RenderTexture equirectRT = new RenderTexture(4096, 2048, 16); // to store img render texture

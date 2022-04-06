@@ -4,8 +4,9 @@ using System.Collections.Generic;
 
 [ExecuteInEditMode]
 public class CameraSpawnController : MonoBehaviour {
+
     [SerializeField]
-    private GameObject startPoint;
+    private GameObject camerasPivot;
     [SerializeField]
     private GameObject captureCameraPrefab;
     [SerializeField]
@@ -16,11 +17,8 @@ public class CameraSpawnController : MonoBehaviour {
     public List<Point> points;
 
     private CameraViewController viewController;
-
     private MeshFilter combinedMF;
-
     private int totalCapture = 0;
-    private int limitHelper = 0;
 
     private bool _debugging = false; // for spawning debug points
     public bool startDebugging { get => _debugging; set => _debugging = value; }
@@ -32,7 +30,7 @@ public class CameraSpawnController : MonoBehaviour {
     public int setMaxCameraSpawn { get => maxCameraSpawn; set => maxCameraSpawn = value; }
 
     /// <summary>
-    /// Struct to store the debug points' properties
+    /// Struct to store the debug points' position
     /// </summary>
     public struct Point {
         public Vector3 pos;
@@ -41,6 +39,9 @@ public class CameraSpawnController : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// Indicating the state of this script
+    /// </summary>
     public enum State {
         Idle,
         Spawning,
@@ -55,7 +56,7 @@ public class CameraSpawnController : MonoBehaviour {
             combinedMF = gameObject.AddComponent<MeshFilter>();
         }
         points = new List<Point>();
-        Clean();
+        CleanAll();
     }
 
     void FixedUpdate() {
@@ -76,7 +77,7 @@ public class CameraSpawnController : MonoBehaviour {
     }
 
     void OnApplicationQuit() {
-        Clean();
+        CleanAll();
     }
 
     /// <summary>
@@ -146,26 +147,33 @@ public class CameraSpawnController : MonoBehaviour {
         }
     }
 
-    void SpawnCameraAt(Point p, int limitPerLine) {
+    private int currInstNum = 0;
+
+    /// <summary>
+    /// Spawn camera at point p with a cubemap instance
+    /// </summary>
+    /// <param name="p">Spanw point</param>
+    /// <param name="instPerRow">Number of cubemap instance per row</param>
+    void SpawnCameraAt(Point p, int instPerRow, float gap = 5) {
         // Create a temporary camera to capture cubemap at a random point
         GameObject camObj = Instantiate(captureCameraPrefab);
         camObj.name = "tmp_camera_" + totalCapture;
         Camera tmpCam = camObj.GetComponent<Camera>();
-        camObj.transform.position = p.pos;// move camera to a random point
+        camObj.transform.position = p.pos;// move camera to the random point
 
         // Create a sphere/cube to apply cubemap on
         GameObject cubeInst = Instantiate(cubemapSpawnPrefab);
         cubeInst.name = "cubemap_cube_" + totalCapture;
         cubeInst.transform.GetChild(0).name = "cubemap_camera_" + totalCapture;
-        if (limitHelper < limitPerLine) {
-            startPoint.transform.position += startPoint.transform.forward * 2;
+        if (currInstNum < instPerRow) {
+            camerasPivot.transform.position += camerasPivot.transform.forward * gap;
         } else {
             // next line of prefabs
-            startPoint.transform.position -= startPoint.transform.forward * 2 * (limitPerLine - 1);
-            startPoint.transform.position += startPoint.transform.right * 2;
-            limitHelper = 0;
+            camerasPivot.transform.position -= camerasPivot.transform.forward * gap * (instPerRow - 1);
+            camerasPivot.transform.position += camerasPivot.transform.right * gap;
+            currInstNum = 0;
         }
-        cubeInst.transform.position = startPoint.transform.position;
+        cubeInst.transform.position = camerasPivot.transform.position;
 
         CubemapController mapControl = cubeInst.GetComponent<CubemapController>();
         mapControl.targetCam = tmpCam;
@@ -175,10 +183,13 @@ public class CameraSpawnController : MonoBehaviour {
 
         MeshRenderer mr = cubeInst.GetComponent<MeshRenderer>();
         mr.material = mapControl.cubemapMaterial;
-        limitHelper++;
+        currInstNum++;
     }
 
-    public void SpawnCameras(int limitPerLine = 10) {
+    /// <summary>
+    /// Spawn cameras on random points inside the object where this script binds to
+    /// </summary>
+    public void SpawnCameras(int instPerRow = 10) {
         if (_state == State.Finish) {
             viewController.InitCameras();
             _state = State.Idle;
@@ -186,7 +197,7 @@ public class CameraSpawnController : MonoBehaviour {
         if (_state == State.Spawning && totalCapture < maxCameraSpawn) {
             SpawnPoints(Mathf.CeilToInt(Time.fixedDeltaTime));
             foreach (Point p in points) {
-                SpawnCameraAt(p, limitPerLine);
+                SpawnCameraAt(p, instPerRow);
                 totalCapture++;
             }
             //points.Clear();
@@ -196,9 +207,9 @@ public class CameraSpawnController : MonoBehaviour {
     }
 
     /// <summary>
-    /// Clean all materials and cubemaps
+    /// Clean all cubemap materials and cubemaps
     /// </summary>
-    public void Clean() {
+    public void CleanAll() {
         // find asset with name Cubemap, type of renderTexture in folder "Assets/Textures":
         string[] textureGuids = AssetDatabase.FindAssets("cubemap_ t:renderTexture", new[] { "Assets/Textures" });
         foreach (var asset in textureGuids) {
