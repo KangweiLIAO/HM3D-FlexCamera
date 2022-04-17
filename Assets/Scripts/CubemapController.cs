@@ -10,7 +10,7 @@ public class CubemapController : MonoBehaviour {
     public Material cubemapMaterial;
 
     [HideInInspector]
-    public int cubemapIndex;
+    public string cubemapIndex;
 
     // Start is called before the first frame update
     void Awake() {

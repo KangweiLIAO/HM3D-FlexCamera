@@ -22,7 +22,6 @@ public class CameraViewController : MonoBehaviour {
     void Update() {
         if (cameras.Length > 0) {
             Camera currCam = cameras[currCamIndex];
-            
             if (fisheyeEnabled) {
                 // Camera view rotate around parent center
                 Quaternion camXAngle = Quaternion.AngleAxis(Input.GetAxis("Mouse X") * rotateSpeed, Vector3.up);

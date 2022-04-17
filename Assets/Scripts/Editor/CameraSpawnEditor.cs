@@ -24,27 +24,26 @@ public class CameraSpawnEditor : Editor {
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Max camera count:");
-            controller.setMaxCameraSpawn = EditorGUILayout.IntField(controller.setMaxCameraSpawn);
+            controller.maxCameraSpawn = EditorGUILayout.IntField(controller.maxCameraSpawn);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-            if (controller.startDebugging) {
-                if (GUILayout.Button("Stop Spawning Debug Points")) {
-                    controller.startDebugging = false;
+
+            if (controller.state == CameraSpawnController.State.Idle) {
+                // if controller state is idle
+                if (GUILayout.Button("Spawn Debug Points")) {
+                    controller.state = CameraSpawnController.State.Debuging;
                 }
-            } else {
-                if (GUILayout.Button("Spawn Debug Points")
-                    && !(controller.getState == CameraSpawnController.State.Spawning)) {
-                    controller.startDebugging = true;
+                EditorGUILayout.Space();
+                if (GUILayout.Button("Spawn Cameras")) {
+                    controller.CleanAllCaches(); // clear all cubemap caches
+                    controller.state = CameraSpawnController.State.Spawning;
                 }
             }
-            EditorGUILayout.Space();
-            if (controller.getState == CameraSpawnController.State.Spawning) {
-                if (GUILayout.Button("Stop Cameras Spawning")) {
-                    controller.getState = CameraSpawnController.State.Idle;
-                }
-            } else {
-                if (GUILayout.Button("Spawn Cameras") && !controller.startDebugging) {
-                    controller.getState = CameraSpawnController.State.Spawning;
+
+            if (controller.state == CameraSpawnController.State.Debuging) {
+                // if controller state is debugging
+                if (GUILayout.Button("Stop Spawning Debug Points")) {
+                    controller.state = CameraSpawnController.State.Finish;
                 }
             }
         }
