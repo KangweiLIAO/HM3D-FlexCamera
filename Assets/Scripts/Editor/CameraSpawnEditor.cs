@@ -17,15 +17,15 @@ public class CameraSpawnEditor : Editor {
             controller.Combine();
         }
         EditorGUILayout.Space();
-        EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField("Max camera count:");
-        controller.setMaxCameraSpawn = EditorGUILayout.IntField(controller.setMaxCameraSpawn);
-        EditorGUILayout.EndHorizontal();
-        EditorGUILayout.Space();
         if (!Application.isPlaying) {
             EditorGUILayout.HelpBox("Enter the play mode to spawn debug points or cameras", MessageType.Warning);
             EditorGUILayout.Space();
         } else {
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Max camera count:");
+            controller.setMaxCameraSpawn = EditorGUILayout.IntField(controller.setMaxCameraSpawn);
+            EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             if (controller.startDebugging) {
                 if (GUILayout.Button("Stop Spawning Debug Points")) {

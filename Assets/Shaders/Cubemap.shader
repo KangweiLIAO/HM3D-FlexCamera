@@ -1,4 +1,4 @@
-Shader "Unlit/InverseCullCubeMapShader"
+Shader "Unlit/CullFrontCubeMapShader"
 {
 	Properties
 	{

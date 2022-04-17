@@ -11,42 +11,45 @@ public class CameraSpawnController : MonoBehaviour {
     private GameObject captureCameraPrefab;
     [SerializeField]
     private GameObject cubemapSpawnPrefab;
-    [Range(1, 200)]
-    public int pointSpawnPerSec = 10; // points spawning rate (per second)
 
-    public List<Point> points;
-
-    private CameraViewController viewController;
     private MeshFilter combinedMF;
+    private CameraViewController viewController;
+
+    public List<CameraPoint> points;
+    private int cameraSpawnCount;
     private int totalCapture = 0;
+    private int currInstNum = 0;
 
     private bool _debugging = false; // for spawning debug points
     public bool startDebugging { get => _debugging; set => _debugging = value; }
 
     private State _state = State.Idle; // for spawning cameras
     public State getState { get => _state; set => _state = value; }
+    public int setMaxCameraSpawn { get => cameraSpawnCount; set => cameraSpawnCount = value; }
 
-    private int maxCameraSpawn = 20;
-    public int setMaxCameraSpawn { get => maxCameraSpawn; set => maxCameraSpawn = value; }
-
-    /// <summary>
-    /// Struct to store the debug points' position
-    /// </summary>
-    public struct Point {
-        public Vector3 pos;
-        public Point(Vector3 pos) {
-            this.pos = pos;
-        }
-    }
 
     /// <summary>
-    /// Indicating the state of this script
+    /// The state of this script
     /// </summary>
     public enum State {
         Idle,
         Spawning,
         Finish
     }
+
+    /// <summary>
+    /// Struct to store a camera's status
+    /// </summary>
+    public struct CameraPoint {
+        public Camera camera;
+        public Vector3 pos;
+
+        public CameraPoint(Vector3 pos, Camera camera = null, bool fisheye = false) {
+            this.pos = pos;
+            this.camera = camera;
+        }
+    }
+
 
     void Start() {
         viewController = GameObject.Find("Camera Controller").GetComponent<CameraViewController>();
@@ -55,13 +58,13 @@ public class CameraSpawnController : MonoBehaviour {
             // create a mesh filter component for root object
             combinedMF = gameObject.AddComponent<MeshFilter>();
         }
-        points = new List<Point>();
-        CleanAll();
+        points = new List<CameraPoint>();
+        CleanAllCaches();
     }
 
     void FixedUpdate() {
         if (_debugging) {
-            SpawnPoints(Mathf.CeilToInt(pointSpawnPerSec * Time.fixedDeltaTime));
+            SpawnCameraDebugPoints(Mathf.CeilToInt(Time.fixedDeltaTime));
         }
         SpawnCameras();
     }
@@ -70,30 +73,19 @@ public class CameraSpawnController : MonoBehaviour {
         if (points == null || points.Count == 0)
             return;
 
-        foreach (Point p in points) {
+        foreach (CameraPoint p in points) {
             Gizmos.color = Color.red;
-            Gizmos.DrawWireCube(transform.TransformPoint(p.pos), new Vector3(1, 1, 1));
+            if (!p.camera) {
+                Gizmos.DrawSphere(transform.TransformPoint(p.pos), 0.05f);
+            } else {
+                Gizmos.DrawWireSphere(transform.TransformPoint(p.pos),
+                    cubemapSpawnPrefab.GetComponent<SphereCollider>().radius);
+            }
         }
     }
 
     void OnApplicationQuit() {
-        CleanAll();
-    }
-
-    /// <summary>
-    /// Store the given mesh in resource folder
-    /// </summary>
-    /// <param name="mesh">A mesh, usually is a combined mesh</param>
-    void CreateCombinedMeshAssets(Mesh mesh) {
-        // Find asset with name CombinedMesh in folder "Assets/Generated":
-        string[] guids = AssetDatabase.FindAssets(gameObject.name, new[] { "Assets/Resources/CombinedMeshes/" });
-        if (guids.Length > 0)
-            AssetDatabase.DeleteAsset(guids[0]); // Delete the old combined meshes if there is one
-        try {
-            AssetDatabase.CreateAsset(mesh, "Assets/Resources/CombinedMeshes/" + gameObject.name + ".mat");
-        } catch {
-            Debug.LogError("Failed to create");
-        }
+        CleanAllCaches();
     }
 
     /// <summary>
@@ -122,7 +114,16 @@ public class CameraSpawnController : MonoBehaviour {
                 // Set UInt32 to contains large scale of verties:
                 combinedMF.sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
                 combinedMF.sharedMesh.CombineMeshes(combine);
-                CreateCombinedMeshAssets(combinedMF.sharedMesh);
+                // Store assets to disk
+                string[] guids = AssetDatabase.FindAssets(gameObject.name, new[] { "Assets/Resources/CombinedMeshes/" });
+                if (guids.Length > 0)
+                    AssetDatabase.DeleteAsset(guids[0]); // Delete the old combined meshes if there is one
+                try {
+                    AssetDatabase.CreateAsset(combinedMF.sharedMesh, "Assets/Resources/CombinedMeshes/" 
+                        + gameObject.name + ".mat");
+                } catch {
+                    Debug.LogError("Failed to create");
+                }
             }
         }
     }
@@ -131,40 +132,33 @@ public class CameraSpawnController : MonoBehaviour {
     /// Spawn and display the debug points where the camera will be spawned on
     /// </summary>
     /// <param name="numRays"></param>
-    public void SpawnPoints(int numRays) {
-        if (!Application.isPlaying) {
-            Debug.LogError("Please enter play mode in order to start spawning");
-            return;
-        }
+    public void SpawnCameraDebugPoints(int numRays) {
         if (!combinedMF) {
-            Debug.LogError("A MeshFilter component is required for points spawning in the object " + gameObject.name);
+            Debug.LogError(" A MeshFilter component should be bind to " + gameObject.name);
             return;
         }
         for (int i = 0; i < numRays; i++) {
             Vector3 point = combinedMF.mesh.GetRandomPointInConvex();
-            points.Add(new Point(point));
-
+            points.Add(new CameraPoint(point));
         }
     }
 
-    private int currInstNum = 0;
-
     /// <summary>
-    /// Spawn camera at point p with a cubemap instance
+    /// Spawn a regular camera at point p with a cubemap instance
     /// </summary>
-    /// <param name="p">Spanw point</param>
+    /// <param name="p">Spawning point</param>
     /// <param name="instPerRow">Number of cubemap instance per row</param>
-    void SpawnCameraAt(Point p, int instPerRow, float gap = 5) {
+    void SpawnCameraAt(CameraPoint p, int instPerRow, float gap = 5) {
         // Create a temporary camera to capture cubemap at a random point
         GameObject camObj = Instantiate(captureCameraPrefab);
         camObj.name = "tmp_camera_" + totalCapture;
         Camera tmpCam = camObj.GetComponent<Camera>();
         camObj.transform.position = p.pos;// move camera to the random point
 
-        // Create a sphere/cube to apply cubemap on
-        GameObject cubeInst = Instantiate(cubemapSpawnPrefab);
-        cubeInst.name = "cubemap_cube_" + totalCapture;
-        cubeInst.transform.GetChild(0).name = "cubemap_camera_" + totalCapture;
+        // Create instance to apply the captured cubemap
+        GameObject mapInst = Instantiate(cubemapSpawnPrefab);
+        mapInst.name = "cubemap_cube_" + totalCapture;
+        mapInst.transform.GetChild(0).name = "cubemap_camera_" + totalCapture;
         if (currInstNum < instPerRow) {
             camerasPivot.transform.position += camerasPivot.transform.forward * gap;
         } else {
@@ -173,15 +167,15 @@ public class CameraSpawnController : MonoBehaviour {
             camerasPivot.transform.position += camerasPivot.transform.right * gap;
             currInstNum = 0;
         }
-        cubeInst.transform.position = camerasPivot.transform.position;
+        mapInst.transform.position = camerasPivot.transform.position;
 
-        CubemapController mapControl = cubeInst.GetComponent<CubemapController>();
+        CubemapController mapControl = mapInst.GetComponent<CubemapController>();
         mapControl.targetCam = tmpCam;
         mapControl.cubemapIndex = totalCapture;
         mapControl.CaptureCubemapTexture(); // capture cubemap base on tmp camera
         Destroy(camObj); // Destroy tmp camera to avoid redundancy
 
-        MeshRenderer mr = cubeInst.GetComponent<MeshRenderer>();
+        MeshRenderer mr = mapInst.GetComponent<MeshRenderer>();
         mr.material = mapControl.cubemapMaterial;
         currInstNum++;
     }
@@ -194,9 +188,9 @@ public class CameraSpawnController : MonoBehaviour {
             viewController.InitCameras();
             _state = State.Idle;
         }
-        if (_state == State.Spawning && totalCapture < maxCameraSpawn) {
-            SpawnPoints(Mathf.CeilToInt(Time.fixedDeltaTime));
-            foreach (Point p in points) {
+        if (_state == State.Spawning && totalCapture < cameraSpawnCount-1) {
+            SpawnCameraDebugPoints(Mathf.CeilToInt(Time.fixedDeltaTime));
+            foreach (CameraPoint p in points) {
                 SpawnCameraAt(p, instPerRow);
                 totalCapture++;
             }
@@ -209,7 +203,7 @@ public class CameraSpawnController : MonoBehaviour {
     /// <summary>
     /// Clean all cubemap materials and cubemaps
     /// </summary>
-    public void CleanAll() {
+    public void CleanAllCaches() {
         // find asset with name Cubemap, type of renderTexture in folder "Assets/Textures":
         string[] textureGuids = AssetDatabase.FindAssets("cubemap_ t:renderTexture", new[] { "Assets/Textures" });
         foreach (var asset in textureGuids) {

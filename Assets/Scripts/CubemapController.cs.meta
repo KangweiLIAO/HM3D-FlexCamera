@@ -3,7 +3,10 @@ guid: d6505b1184f5a05438ac18ce33787e86
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - targetCam: {instanceID: 0}
+  - cubemapShader: {fileID: 4800000, guid: 0705f644ae384ca4b8b3f967e9641928, type: 3}
+  - cubemapMaterial: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
