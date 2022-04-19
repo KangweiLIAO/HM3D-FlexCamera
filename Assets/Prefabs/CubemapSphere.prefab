@@ -123,7 +123,7 @@ GameObject:
   - component: {fileID: 7764062706571907795}
   - component: {fileID: 6916142669991994451}
   m_Layer: 6
-  m_Name: Cubemap Sphere
+  m_Name: CubemapSphere
   m_TagString: Cubemap Object
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

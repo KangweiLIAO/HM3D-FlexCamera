@@ -39,9 +39,12 @@ public class CameraViewController : MonoBehaviour {
             if (Input.GetKeyDown(KeyCode.C)) {
                 // switch to the next camera
                 currCamIndex++;
-                if (currCamIndex >= cameras.Length)
+                if (currCamIndex > cameras.Length - 1) {
                     currCamIndex = 0;
-                cameras[currCamIndex - 1].gameObject.SetActive(false);
+                    cameras[cameras.Length - 1].gameObject.SetActive(false);
+                } else {
+                    cameras[currCamIndex - 1].gameObject.SetActive(false);
+                }
                 currCam = cameras[currCamIndex];
                 currCam.gameObject.SetActive(true);
                 fisheyeEnabled = currCam.transform.position != currCam.transform.parent.position;
@@ -49,30 +52,35 @@ public class CameraViewController : MonoBehaviour {
             }
 
             if (Input.GetKeyDown(KeyCode.F)) {
-                EnableFakeFisheye(currCam);
+                EnableMockFisheye(currCam);
             }
         }
     }
 
+    /// <summary>
+    /// Initialize cameras control in the scene
+    /// </summary>
     public void InitCameras() {
         cameras = Camera.allCameras;
-        for (int i = 1; i < cameras.Length; i++) {
-            cameras[i].gameObject.SetActive(false); // Disable all cameras
+        if (cameras.Length > 0) {
+            for (int i = 1; i < cameras.Length; i++) {
+                cameras[i].gameObject.SetActive(false); // Disable all cameras
+            }
+            cameras[0].gameObject.SetActive(true);
         }
     }
 
     /// <summary>
-    /// Faking Fisheye effect by moving the perspective camera outside the cubemap instance
+    /// Mocking Fisheye effect by moving the perspective camera outside the cubemap instance
     /// </summary>
     /// <param name="camera">The camera in the cubemap instance</param>
-    private void EnableFakeFisheye(Camera camera) {
+    private void EnableMockFisheye(Camera camera) {
         if (fisheyeEnabled) {
             fisheyeEnabled = false;
             camera.transform.position += camera.transform.forward * 1;
         } else {
             fisheyeEnabled = true;
             camera.transform.position -= camera.transform.forward * 1;
-            camera.orthographicSize = 0.5f;
             camera.farClipPlane = 2f;
             _cameraOffset = camera.transform.position - camera.transform.parent.position;
         }

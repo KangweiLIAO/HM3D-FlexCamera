@@ -173,14 +173,14 @@ public class CameraSpawnController : MonoBehaviour {
         }
         p.inst.transform.position = camerasPivot.transform.position;
 
-        CubemapController mapControl = p.inst.GetComponent<CubemapController>();
-        mapControl.targetCam = tmpCam;
-        mapControl.cubemapIndex = suffix;
-        mapControl.CaptureCubemapTexture(); // capture cubemap base on tmp camera
+        CubemapController cubemapControl = p.inst.GetComponent<CubemapController>();
+        cubemapControl.targetCam = tmpCam;
+        cubemapControl.cubemapIndex = suffix;
+        cubemapControl.CaptureCubemap(); // capture cubemap base on tmp camera
         Destroy(camObj); // Destroy tmp camera to avoid redundancy
 
         MeshRenderer mr = p.inst.GetComponent<MeshRenderer>();
-        mr.material = mapControl.cubemapMaterial;
+        mr.material = cubemapControl.targetMaterial;
         currInstNum++;
     }
 

@@ -5,33 +5,36 @@ using UnityEditor;
 /// Bind to a cube/sphere that cubemap can apply on
 /// </summary>
 public class CubemapController : MonoBehaviour {
+    public bool testMode = false;
     public Camera targetCam;
     public Shader cubemapShader;
-    public Material cubemapMaterial;
-
+    public Material targetMaterial;
     [HideInInspector]
     public string cubemapIndex;
 
+
     // Start is called before the first frame update
     void Awake() {
-        cubemapMaterial = new Material(cubemapShader);
+        if (!targetCam) { targetCam = gameObject.GetComponent<Camera>(); }
+        if (!targetMaterial) {
+            targetMaterial = new Material(cubemapShader);
+        }
     }
-    
+
     /// <summary>
     /// Captures a cubemap texture base on the target camera
     /// </summary>
     /// <returns>captured render texture</returns>
-    public RenderTexture CaptureCubemapTexture() {
+    public RenderTexture CaptureCubemap() {
         RenderTexture cubemap = new RenderTexture(4096, 4096, 32);
         if (targetCam) {
             cubemap.dimension = UnityEngine.Rendering.TextureDimension.Cube;
             targetCam.RenderToCubemap(cubemap);
             // save texture to disk
             AssetDatabase.CreateAsset(cubemap, "Assets/Textures/cubemap_" + cubemapIndex + ".asset");
-            cubemapMaterial.SetTexture("_CubeMap", cubemap); // update shader property "_CubeMap"
-            if (cubemapMaterial) {
-                // save material to disk
-                AssetDatabase.CreateAsset(cubemapMaterial, "Assets/Materials/material_" + cubemapIndex + ".asset");
+            targetMaterial.SetTexture("_CubeMap", cubemap); // update shader property "_CubeMap"
+            if (!testMode) { // save material to disk
+                AssetDatabase.CreateAsset(targetMaterial, "Assets/Materials/material_" + cubemapIndex + ".asset");
             }
         } else {
             Debug.LogWarning("Target Camera not assigned, " + gameObject.name + "returning default render texture.");
@@ -40,14 +43,14 @@ public class CubemapController : MonoBehaviour {
     }
 
     /// <summary>
-    /// Captures a panorama texture base on the target camera
+    /// Captures a panorama texture base on the target camera and export as jpg file
     /// </summary>
-    public void CapturePanoramaPicture() {
-        RenderTexture cubemapRT = CaptureCubemapTexture(); // to store cubemap texture
+    public void CapturePanoramicImage() {
+        RenderTexture cubemapRT = CaptureCubemap(); // to store cubemap texture
         RenderTexture equirectRT = new RenderTexture(4096, 2048, 16); // to store img render texture
         if (equirectRT.Create()) {
             cubemapRT.ConvertToEquirect(equirectRT);
-            cubemapMaterial.SetTexture("_CubeMap", cubemapRT);
+            targetMaterial.SetTexture("_CubeMap", cubemapRT);
             Texture2D t2d = new Texture2D(equirectRT.width, equirectRT.height); // to store img texture
             RenderTexture.active = equirectRT;
             // store equirectRT image in a Texture2D:

@@ -3,18 +3,17 @@ using UnityEngine;
 
 [CustomEditor(typeof(CameraSpawnController))]
 public class CameraSpawnEditor : Editor {
-
-    CameraSpawnController controller;
+    CameraSpawnController control;
 
     private void OnEnable() {
-        controller = (CameraSpawnController)target;
+        control = target as CameraSpawnController; // assign target to a var
     }
 
     public override void OnInspectorGUI() {
-        base.OnInspectorGUI();
+        base.OnInspectorGUI(); // default call
         EditorGUILayout.Space();
         if (GUILayout.Button("Combine meshes")) {
-            controller.Combine();
+            control.Combine();
         }
         EditorGUILayout.Space();
         if (!Application.isPlaying) {
@@ -24,26 +23,24 @@ public class CameraSpawnEditor : Editor {
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Max camera count:");
-            controller.maxCameraSpawn = EditorGUILayout.IntField(controller.maxCameraSpawn);
+            control.maxCameraSpawn = EditorGUILayout.IntField(control.maxCameraSpawn);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-
-            if (controller.state == CameraSpawnController.State.Idle) {
+            if (control.state == CameraSpawnController.State.Idle) {
                 // if controller state is idle
                 if (GUILayout.Button("Spawn Debug Points")) {
-                    controller.state = CameraSpawnController.State.Debuging;
+                    control.state = CameraSpawnController.State.Debuging;
                 }
                 EditorGUILayout.Space();
                 if (GUILayout.Button("Spawn Cameras")) {
-                    controller.CleanAllCaches(); // clear all cubemap caches
-                    controller.state = CameraSpawnController.State.Spawning;
+                    control.CleanAllCaches(); // clear all cubemap caches
+                    control.state = CameraSpawnController.State.Spawning;
                 }
             }
-
-            if (controller.state == CameraSpawnController.State.Debuging) {
+            if (control.state == CameraSpawnController.State.Debuging) {
                 // if controller state is debugging
                 if (GUILayout.Button("Stop Spawning Debug Points")) {
-                    controller.state = CameraSpawnController.State.Finish;
+                    control.state = CameraSpawnController.State.Finish;
                 }
             }
         }
