@@ -1,4 +1,4 @@
-# HM3D-FlexCamera
+# Flexible Camera Parameters with HM3D
 
 > This project is compeleted, minor modifications may added later
 
